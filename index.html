@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chuchurro ✨</title>
+  <style>
+    :root {
+      --bg1: #050816;
+      --bg2: #130b2c;
+      --accent: #ff7ad9;
+      --accent2: #7ad7ff;
+      --gold: #ffd36e;
+      --text: #fff6fd;
+      --glass: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(122,215,255,0.15), transparent 25%),
+        radial-gradient(circle at 80% 10%, rgba(255,122,217,0.15), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(255,211,110,0.08), transparent 30%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    #starfield, #particleCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .hero {
+      transition: opacity 1s ease, transform 1s ease;
+      max-width: 950px;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.45);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-size: 0.92rem;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4.8rem);
+      line-height: 1.05;
+      text-shadow: 0 0 20px rgba(255,255,255,0.15);
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, #fff, #ffd8f3, #b7ecff, #ffe8aa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      opacity: 0.9;
+      max-width: 720px;
+      margin: 18px auto 28px;
+      line-height: 1.7;
+    }
+
+    .controls {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      padding: 14px 22px;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+    button:hover { transform: translateY(-2px) scale(1.02); }
+    button:active { transform: scale(0.98); }
+
+    .magic-btn {
+      background: linear-gradient(90deg, var(--accent), #c98bff, var(--accent2));
+      color: white;
+      box-shadow: 0 12px 35px rgba(255,122,217,0.35);
+    }
+
+    .music-btn {
+      background: rgba(255,255,255,0.09);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.28);
+    }
+
+    .card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card p {
+      margin: 0;
+      padding: 14px;
+      font-size: 0.95rem;
+      opacity: 0.92;
+    }
+
+    .message {
+      margin-top: 22px;
+      font-size: 1rem;
+      opacity: 0.88;
+    }
+
+    .hero.hidden {
+      opacity: 0;
+      transform: scale(0.96) translateY(20px);
+      pointer-events: none;
+      visibility: hidden;
+      position: absolute;
+      inset: 0;
+    }
+
+    .final-photo {
+      margin-top: 28px;
+      display: none;
+      animation: fadeIn 1.8s ease forwards;
+      position: relative;
+      z-index: 5;
+    }
+
+    .final-photo img {
+      width: min(90vw, 420px);
+      border-radius: 28px;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: 0 0 50px rgba(255,190,120,0.25), 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .love-note {
+      margin-top: 18px;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      max-width: 720px;
+      opacity: 0.95;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px) scale(.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 20px; border-radius: 24px; }
+      .card img { height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+  <canvas id="particleCanvas"></canvas>
+
+  <audio id="bgMusic" loop>
+    <source src="Ojos Color Sol - Maullek (Official Audio).mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="container">
+    <section class="hero">
+      <div class="badge">🌌 1 mes de adoptado ✨</div>
+      <h1><span class="gradient">Chuchurro</span>, el gatito más cósmico</h1>
+      <p class="subtitle">
+        Una pequeña constelación dedicada al primer mes de aventuras de Chuchurro.
+        Porque a veces el universo se ve naranja, tiene orejitas y usa un suéter precioso.
+      </p>
+
+      <div class="controls">
+        <button class="magic-btn" id="magicBtn">✨ Pulsar para ver la magia ✨</button>
+        <button class="music-btn" id="musicBtn">🎵 Reproducir música</button>
+      </div>
+
+      <div class="message" id="statusText">Las estrellas están esperando...</div>
+      </section>
+
+      <div class="final-photo" id="finalPhoto">
+        <img src="chuchuchu.jpeg" alt="Chuchurro" />
+        <div class="love-note">
+          Feliz primer mes de adoptado, <strong>Chuchurro</strong> 💖<br>
+          Llegaste a convertirte en una pequeña galaxia de amor, ternura y travesuras.
+        </div>
+      </div>
+  </div>
+
+  <script>
+    const starfield = document.getElementById('starfield');
+    const particleCanvas = document.getElementById('particleCanvas');
+    const sctx = starfield.getContext('2d');
+    const pctx = particleCanvas.getContext('2d');
+    const magicBtn = document.getElementById('magicBtn');
+    const musicBtn = document.getElementById('musicBtn');
+    const music = document.getElementById('bgMusic');
+    const statusText = document.getElementById('statusText');
+    const finalPhoto = document.getElementById('finalPhoto');
+    const hero = document.querySelector('.hero');
+
+    let w, h, stars = [], particles = [], animationStarted = false, particlesFormed = false;
+    let imageLoaded = false;
+    const img = new Image();
+    img.src = 'chuchuchu.jpeg';
+    img.onload = () => { imageLoaded = true; };
+
+    function resize() {
+      w = starfield.width = particleCanvas.width = window.innerWidth;
+      h = starfield.height = particleCanvas.height = window.innerHeight;
+      createStars();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function createStars() {
+      stars = Array.from({ length: Math.min(220, Math.floor((w * h) / 7000)) }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.8 + 0.4,
+        speed: Math.random() * 0.25 + 0.05,
+        alpha: Math.random() * 0.8 + 0.2
+      }));
+    }
+
+    function drawStarfield() {
+      sctx.clearRect(0, 0, w, h);
+      for (const star of stars) {
+        sctx.beginPath();
+        sctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
+        sctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        sctx.fill();
+        star.y += star.speed;
+        if (star.y > h) {
+          star.y = -5;
+          star.x = Math.random() * w;
+        }
+      }
+      requestAnimationFrame(drawStarfield);
+    }
+    drawStarfield();
+
+    function toggleMusic() {
+      if (music.paused) {
+        music.play();
+        musicBtn.textContent = '⏸️ Pausar música';
+      } else {
+        music.pause();
+        musicBtn.textContent = '🎵 Reproducir música';
+      }
+    }
+    musicBtn.addEventListener('click', toggleMusic);
+
+    function buildParticlesFromImage() {
+      if (!imageLoaded) return [];
+      const off = document.createElement('canvas');
+      const offCtx = off.getContext('2d');
+
+      const imgW = 320;
+      const scale = img.width / img.height;
+      const imgH = imgW / scale;
+      off.width = imgW;
+      off.height = imgH;
+      offCtx.drawImage(img, 0, 0, imgW, imgH);
+
+      const imageData = offCtx.getImageData(0, 0, imgW, imgH).data;
+      const points = [];
+      const gap = 5;
+      const offsetX = w / 2 - imgW / 2;
+      const offsetY = h / 2 - imgH / 2 - 20;
+
+      for (let y = 0; y < imgH; y += gap) {
+        for (let x = 0; x < imgW; x += gap) {
+          const i = (y * imgW + x) * 4;
+          const alpha = imageData[i + 3];
+          if (alpha > 120) {
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            points.push({
+              tx: x + offsetX,
+              ty: y + offsetY,
+              x: Math.random() * w,
+              y: -Math.random() * h,
+              size: Math.random() * 1.9 + 0.8,
+              color: `rgba(${r},${g},${b},0.95)`
+            });
+          }
+        }
+      }
+      return points;
+    }
+
+    function animateParticles() {
+      pctx.clearRect(0, 0, w, h);
+      let completed = 0;
+
+      for (const p of particles) {
+        p.x += (p.tx - p.x) * 0.035;
+        p.y += (p.ty - p.y) * 0.035;
+
+        const dx = p.tx - p.x;
+        const dy = p.ty - p.y;
+        if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) completed++;
+
+        pctx.beginPath();
+        pctx.fillStyle = p.color;
+        pctx.shadowBlur = 12;
+        pctx.shadowColor = p.color;
+        pctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        pctx.fill();
+      }
+
+      if (completed < particles.length * 0.96) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        particlesFormed = true;
+        statusText.textContent = '✨ Chuchurro ha aparecido entre las estrellas ✨';
+      }
+    }
+
+    function drawFormedParticles() {
+      if (!particlesFormed) return;
+
+      pctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        pctx.beginPath();
+        pctx.fillStyle = p.color;
+        pctx.shadowBlur = 12;
+        pctx.shadowColor = p.color;
+        pctx.arc(p.tx, p.ty, p.size, 0, Math.PI * 2);
+        pctx.fill();
+      }
+
+      requestAnimationFrame(drawFormedParticles);
+    }
+
+    async function startMagic() {
+      if (animationStarted) return;
+      animationStarted = true;
+      statusText.textContent = 'Las estrellas están viajando para formar a Chuchurro...';
+      setTimeout(() => {
+        hero.classList.add('hidden');
+        hero.style.display = 'none';
+      }, 500);
+      magicBtn.disabled = true;
+      magicBtn.style.opacity = '.7';
+
+      if (music.paused) {
+        try {
+          await music.play();
+          musicBtn.textContent = '⏸️ Pausar música';
+        } catch (e) {
+          console.log('La música necesita interacción del usuario');
+        }
+      }
+
+      setTimeout(() => {
+        particles = buildParticlesFromImage();
+        animateParticles();
+        setTimeout(() => {
+          drawFormedParticles();
+        }, 3500);
+      }, 900);
+    }
+
+    magicBtn.addEventListener('click', startMagic);
+  </script>
+</body>
+</html>
